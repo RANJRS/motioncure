@@ -75,7 +75,10 @@ def run_pipeline():
         # ── Stage 4: Motion Detection ────────────────────────────────────────
         state.update({'progress': 20, 'stage': 'Stage 4 — Computing optical flow…'})
 
-        files_list    = sorted(os.listdir(PROCESSED_DIR))
+        files_list    = sorted(
+            f for f in os.listdir(PROCESSED_DIR)
+            if f.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.tif'))
+        )
         motion_values = []
         ssim_motion   = []
 
@@ -321,7 +324,7 @@ def run_pipeline():
                 'avg_ssim':         round(float(np.mean(ssim_scores)), 4) if ssim_scores else 0,
                 'avg_psnr':         round(float(np.mean(psnr_scores)), 2) if psnr_scores else 0,
                 'accuracy':         round(float(accuracy), 2),
-                'total_frames':     len(corrected_frames),
+                'total_frames':     state.get('uploaded_count', len(dataset_files)),
                 'artifact_count':   len(artifact_frames),
                 'improved_count':   improved_count,
                 'threshold_motion': round(threshold_motion, 4),
@@ -372,6 +375,9 @@ def upload():
         state.update({'status': 'error', 'error': 'No files received.'})
         return jsonify({'success': False, 'error': 'No files received.'}), 400
 
+    valid_exts = ('.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.tif')
+    img_counter = 0  # sequential counter to avoid filename collisions
+
     for f in uploaded:
         name = os.path.basename(f.filename)
         dest = os.path.join(UPLOAD_DIR, name)
@@ -394,8 +400,15 @@ def upload():
             cap.release()
             os.remove(dest)
 
-    # Count valid images
-    valid_exts = ('.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.tif')
+        elif name.lower().endswith(valid_exts):
+            # Rename to sequential name to avoid collisions from same-named files
+            ext = os.path.splitext(name)[1]
+            new_name = f'img_{img_counter:05d}{ext}'
+            new_dest = os.path.join(UPLOAD_DIR, new_name)
+            if dest != new_dest:
+                os.rename(dest, new_dest)
+            img_counter += 1
+
     # Flatten any nested dirs from ZIP
     for root, dirs, files in os.walk(UPLOAD_DIR):
         for fname in files:
@@ -403,12 +416,16 @@ def upload():
                 src = os.path.join(root, fname)
                 dst = os.path.join(UPLOAD_DIR, fname)
                 if src != dst:
-                    shutil.move(src, dst)
+                    # Also use sequential naming for extracted files
+                    ext = os.path.splitext(fname)[1]
+                    new_name = f'img_{img_counter:05d}{ext}'
+                    shutil.move(src, os.path.join(UPLOAD_DIR, new_name))
+                    img_counter += 1
 
     frame_count = len([f for f in os.listdir(UPLOAD_DIR)
                        if f.lower().endswith(valid_exts)])
 
-    state.update({'status': 'ready', 'progress': 0, 'stage': f'{frame_count} frames ready.'})
+    state.update({'status': 'ready', 'progress': 0, 'stage': f'{frame_count} frames ready.', 'uploaded_count': frame_count})
     return jsonify({'success': True, 'frame_count': frame_count})
 
 
