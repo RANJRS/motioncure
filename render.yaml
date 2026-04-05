@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: motioncure
+    runtime: docker
+    plan: free
+    healthCheckPath: /status
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MotionGuard | Artifact Detection Pipeline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+
+<body class="bg-slate-900 text-slate-100 font-sans">
+
+    <header class="py-16 px-6 border-b border-slate-800 bg-gradient-to-b from-slate-950 to-slate-900">
+        <div class="max-w-5xl mx-auto text-center">
+            <div class="inline-block p-3 bg-blue-500/10 rounded-full mb-4">
+                <i data-lucide="zap" class="text-blue-400 w-8 h-8"></i>
+            </div>
+            <h1 class="text-5xl font-extrabold tracking-tight mb-4">Motion Artifact Correction</h1>
+            <p class="text-xl text-slate-400 max-w-2xl mx-auto">
+                An advanced Farneback Optical Flow pipeline for frame stabilization and quality assessment in video
+                datasets.
+            </p>
+        </div>
+    </header>
+
+    <section class="py-12 px-6">
+        <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                <p class="text-slate-400 text-sm font-medium uppercase mb-1">Target SSIM</p>
+                <p class="text-3xl font-bold text-emerald-400">> 0.75</p>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                <p class="text-slate-400 text-sm font-medium uppercase mb-1">Target PSNR</p>
+                <p class="text-3xl font-bold text-blue-400">> 25 dB</p>
+            </div>
+            <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700">
+                <p class="text-slate-400 text-sm font-medium uppercase mb-1">Methodology</p>
+                <p class="text-3xl font-bold text-purple-400">Hybrid Flow</p>
+            </div>
+        </div>
+    </section>
+
+    <main class="max-w-5xl mx-auto px-6 py-12 space-y-24">
+
+        <section>
+            <h2 class="text-3xl font-bold mb-8 flex items-center gap-3">
+                <i data-lucide="layers" class="text-blue-500"></i> Pipeline Architecture
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div class="space-y-6">
+                    <div class="flex gap-4">
+                        <div
+                            class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold">
+                            1</div>
+                        <div>
+                            <h3 class="text-xl font-semibold">Preprocessing (CLAHE)</h3>
+                            <p class="text-slate-400">Enhances local contrast and reduces sensor noise using Bilateral
+                                Filters and Laplacian sharpening.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div
+                            class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold">
+                            2</div>
+                        <div>
+                            <h3 class="text-xl font-semibold">Optical Flow Estimation</h3>
+                            <p class="text-slate-400">Calculates Farneback dense flow to track pixel displacement
+                                between adjacent frames.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4">
+                        <div
+                            class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center font-bold">
+                            3</div>
+                        <div>
+                            <h3 class="text-xl font-semibold">Motion Correction</h3>
+                            <p class="text-slate-400">Applies Inverse Mapping via <code>cv2.remap</code> to realign
+                                frames based on the calculated flow vectors.</p>
+                        </div>
+                    </div>
+                </div>
+                <div
+                    class="bg-slate-800 rounded-xl p-2 border border-slate-700 aspect-video flex items-center justify-center italic text-slate-500">
+                    [ Insert your "Motion Graph" Here ]
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-3xl font-bold mb-8 flex items-center gap-3">
+                <i data-lucide="code" class="text-blue-500"></i> Core Correction Logic
+            </h2>
+            <div class="rounded-xl overflow-hidden shadow-2xl border border-slate-700">
+                <pre><code class="language-python">
+# Optical Flow Correction Snippet
+flow = cv2.calcOpticalFlowFarneback(img1_blur, img2_blur, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+mag = np.sqrt(flow[...,0]**2 + flow[...,1]**2)
+
+# Hybrid Thresholding
+if (np.percentile(mag,90) > threshold_motion or (1 - ssim(img1, img2)) > threshold_ssim):
+    artifact_frames.append(i)
+
+# Warp frame based on flow
+corrected = cv2.remap(img2, flow_map+flow, None, cv2.INTER_LINEAR)
+                </code></pre>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-3xl font-bold mb-8 flex items-center gap-3">
+                <i data-lucide="bar-chart-3" class="text-blue-500"></i> Sample Evaluation
+            </h2>
+            <div class="overflow-hidden rounded-xl border border-slate-700 bg-slate-800">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-700/50">
+                        <tr>
+                            <th class="p-4 font-semibold">Frame ID</th>
+                            <th class="p-4 font-semibold">SSIM Score</th>
+                            <th class="p-4 font-semibold">PSNR (dB)</th>
+                            <th class="p-4 font-semibold">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700">
+                        <tr>
+                            <td class="p-4">Frame 001</td>
+                            <td class="p-4">0.842</td>
+                            <td class="p-4">28.4</td>
+                            <td class="p-4 text-emerald-400">Pass</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4">Frame 002</td>
+                            <td class="p-4">0.791</td>
+                            <td class="p-4">26.1</td>
+                            <td class="p-4 text-emerald-400">Pass</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4">Frame 003</td>
+                            <td class="p-4">0.710</td>
+                            <td class="p-4">22.8</td>
+                            <td class="p-4 text-red-400">Artifact Detected</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="py-12 px-6 border-t border-slate-800 text-center text-slate-500">
+        <p>Built with OpenCV, NumPy, and Scikit-Image</p>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+        // Initialize Syntax Highlighting
+        hljs.highlightAll();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+dataset/*
+processed_frames/*
+final.avi
+final.mp4
+*.zip
+ngrok.exe
+ngrok.zip
+cloudflared.exe
+tunnel.py
+TUNNEL.bat
+START.bat
+.env
+*.log

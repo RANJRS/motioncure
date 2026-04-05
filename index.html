@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MotionCure — Hybrid Motion Correction Pipeline</title>
+  <meta name="description"
+    content="A professional AI-powered hybrid motion detection and correction pipeline using Optical Flow, SSIM and PSNR metrics for medical and video imaging." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- BACKGROUND PARTICLES -->
+  <div class="bg-grid"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <!-- NAV -->
+  <nav id="navbar">
+    <div class="nav-inner">
+      <div class="nav-logo">
+        <span class="logo-icon">⬡</span>
+        <span class="logo-text">MotionCure</span>
+      </div>
+      <div class="nav-links">
+        <a href="#pipeline">Pipeline</a>
+        <a href="#metrics">Metrics</a>
+        <a href="#code">Code</a>
+        <a href="#results">Results</a>
+      </div>
+      <a href="#code" class="nav-cta">View Code</a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-badge">
+      <span class="badge-dot"></span>
+      Improved Accuracy Pipeline · v2.0
+    </div>
+    <h1 class="hero-title">
+      Hybrid Motion<br />
+      <span class="gradient-text">Correction Engine</span>
+    </h1>
+    <p class="hero-sub">
+      A high-accuracy pipeline combining <strong>Farneback Optical Flow</strong>, <strong>SSIM</strong>, and
+      <strong>PSNR</strong> metrics
+      with adaptive CLAHE preprocessing to detect and correct inter-frame motion artifacts in medical and video imaging.
+    </p>
+    <div class="hero-actions">
+      <a href="app.html" class="btn btn-launch" id="btn-launch-app">
+        <span class="launch-icon">⚡</span> Home
+        <span class="btn-arrow">→</span>
+      </a>
+      <a href="#pipeline" class="btn btn-primary">Explore Pipeline</a>
+      <a href="#code" class="btn btn-ghost">
+        <span class="code-icon">&lt;/&gt;</span> View Source
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat-card">
+        <span class="stat-val" id="stat1">384×384</span>
+        <span class="stat-label">Frame Resolution</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="stat2">9</span>
+        <span class="stat-label">Pipeline Stages</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="stat3">Dual</span>
+        <span class="stat-label">Motion Detectors</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="stat4">MJPG</span>
+        <span class="stat-label">Output Codec</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PIPELINE STAGES -->
+  <section class="section pipeline-section" id="pipeline">
+    <div class="section-label">Pipeline Architecture</div>
+    <h2 class="section-title">9-Stage Processing<br /><span class="gradient-text">Workflow</span></h2>
+    <p class="section-sub">Each stage is precisely engineered for maximum artifact detection and correction accuracy.
+    </p>
+
+    <div class="pipeline-flow">
+      <div class="stage-card" data-step="1">
+        <div class="stage-num">01</div>
+        <div class="stage-icon">📁</div>
+        <h3>Dataset Upload</h3>
+        <p>Accepts <code>.zip</code>, <code>.mp4</code>, <code>.avi</code> or raw image files. Videos are auto-extracted
+          frame-by-frame.</p>
+        <div class="stage-tag">Input</div>
+      </div>
+      <div class="stage-arrow">→</div>
+      <div class="stage-card" data-step="2">
+        <div class="stage-num">02</div>
+        <div class="stage-icon">🗜️</div>
+        <h3>Extract & Convert</h3>
+        <p>ZIP archives extracted, video frames decoded via OpenCV and saved as PNG sequences into the dataset
+          directory.</p>
+        <div class="stage-tag">IO</div>
+      </div>
+      <div class="stage-arrow">→</div>
+      <div class="stage-card" data-step="3">
+        <div class="stage-num">03</div>
+        <div class="stage-icon">🧹</div>
+        <h3>Preprocessing</h3>
+        <p>Resize → Denoise (NLM) → CLAHE contrast → Bilateral smoothing → Unsharp masking sharpening.</p>
+        <div class="stage-tag">Core</div>
+      </div>
+      <div class="stage-arrow">→</div>
+      <div class="stage-card" data-step="4">
+        <div class="stage-num">04</div>
+        <div class="stage-icon">🔍</div>
+        <h3>Hybrid Motion Detection</h3>
+        <p>Farneback Optical Flow (90th percentile magnitude) combined with SSIM dissimilarity for dual-threshold
+          detection.</p>
+        <div class="stage-tag">AI Core</div>
+      </div>
+      <div class="stage-arrow">→</div>
+      <div class="stage-card" data-step="5">
+        <div class="stage-num">05</div>
+        <div class="stage-icon">🩹</div>
+        <h3>Motion Correction</h3>
+        <p>Flow-guided <code>cv2.remap()</code> warping applied to flagged frames, producing artifact-corrected output
+          sequences.</p>
+        <div class="stage-tag">Correction</div>
+      </div>
+      <div class="stage-arrow">→</div>
+      <div class="stage-card" data-step="6">
+        <div class="stage-num">06</div>
+        <div class="stage-icon">📊</div>
+        <h3>Accuracy Evaluation</h3>
+        <p>Per-frame SSIM and PSNR computed. Frames with SSIM &gt; 0.75 and PSNR &gt; 25 dB counted as successfully
+          improved.</p>
+        <div class="stage-tag">QA</div>
+      </div>
+      <div class="stage-arrow">→</div>
+      <div class="stage-card" data-step="7">
+        <div class="stage-num">07</div>
+        <div class="stage-icon">📈</div>
+        <h3>Motion Graph</h3>
+        <p>Time-series plot of optical flow magnitude with adaptive threshold line, revealing artifact peaks across
+          frames.</p>
+        <div class="stage-tag">Viz</div>
+      </div>
+      <div class="stage-arrow">→</div>
+      <div class="stage-card" data-step="8">
+        <div class="stage-num">08</div>
+        <div class="stage-icon">🖼️</div>
+        <h3>Sample Viewer + Table</h3>
+        <p>Side-by-side Original vs Corrected panels for 3 sample frames, paired with a metrics DataFrame table.</p>
+        <div class="stage-tag">Report</div>
+      </div>
+      <div class="stage-arrow">→</div>
+      <div class="stage-card" data-step="9">
+        <div class="stage-num">09</div>
+        <div class="stage-icon">🎬</div>
+        <h3>Video Export</h3>
+        <p>Annotated AVI compiled with live SSIM/PSNR overlays and motion graph inset, then transcoded to MP4 via
+          FFmpeg.</p>
+        <div class="stage-tag">Output</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREPROCESSING DEEP DIVE -->
+  <section class="section preprocess-section">
+    <div class="section-label">Stage 3 Deep Dive</div>
+    <h2 class="section-title">Preprocessing <span class="gradient-text">Stack</span></h2>
+    <div class="preprocess-grid">
+      <div class="preprocess-step">
+        <div class="ps-num">1</div>
+        <div class="ps-content">
+          <h4>Resize → 384×384</h4>
+          <p>Standardizes all input frames to a consistent square resolution for uniform flow computation.</p>
+        </div>
+      </div>
+      <div class="preprocess-step">
+        <div class="ps-num">2</div>
+        <div class="ps-content">
+          <h4>Grayscale Conversion</h4>
+          <p>BGR to single-channel gray — reduces dimensionality while preserving structural information.</p>
+        </div>
+      </div>
+      <div class="preprocess-step">
+        <div class="ps-num">3</div>
+        <div class="ps-content">
+          <h4>NLM Denoising</h4>
+          <p><code>fastNlMeansDenoising(h=10, templateSize=7, searchSize=21)</code> — removes Gaussian and impulse
+            noise.</p>
+        </div>
+      </div>
+      <div class="preprocess-step">
+        <div class="ps-num">4</div>
+        <div class="ps-content">
+          <h4>CLAHE Enhancement</h4>
+          <p><code>clipLimit=2.5, tileGrid=(8,8)</code> — adaptive histogram equalization avoids over-amplifying noise
+            in flat regions.</p>
+        </div>
+      </div>
+      <div class="preprocess-step">
+        <div class="ps-num">5</div>
+        <div class="ps-content">
+          <h4>Bilateral Filter</h4>
+          <p><code>d=7, σColor=50, σSpace=50</code> — edge-preserving smoothing that removes texture while keeping
+            boundaries sharp.</p>
+        </div>
+      </div>
+      <div class="preprocess-step">
+        <div class="ps-num">6</div>
+        <div class="ps-content">
+          <h4>Laplacian Sharpening</h4>
+          <p>Custom 3×3 kernel <code>[[0,-1,0],[-1,5,-1],[0,-1,0]]</code> — enhances fine structural edges for better
+            flow estimation.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METRICS -->
+  <section class="section metrics-section" id="metrics">
+    <div class="section-label">Quality Metrics</div>
+    <h2 class="section-title">Accuracy <span class="gradient-text">Thresholds</span></h2>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-icon">🌊</div>
+        <h3>Optical Flow Magnitude</h3>
+        <div class="metric-formula">threshold = median + 1.2 × σ</div>
+        <p>90th-percentile magnitude of Farneback dense flow field flags frames with large-scale spatial displacement.
+        </p>
+        <div class="metric-bar-wrap">
+          <div class="metric-bar" style="--w:82%"></div>
+          <span>82% weight in detection</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">🔁</div>
+        <h3>SSIM Dissimilarity</h3>
+        <div class="metric-formula">threshold = mean + 0.8 × σ</div>
+        <p>Structural similarity loss (1 − SSIM) captures perceptual changes between consecutive frames beyond pixel
+          differences.</p>
+        <div class="metric-bar-wrap">
+          <div class="metric-bar" style="--w:68%"></div>
+          <span>68% contribution to dual gate</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">📡</div>
+        <h3>PSNR Score</h3>
+        <div class="metric-formula">PSNR = 20 log₁₀(255 / √MSE)</div>
+        <p>Signal-to-noise ratio in dB. Frames above <strong>25 dB</strong> with SSIM &gt; 0.75 are counted as
+          successfully corrected.</p>
+        <div class="metric-bar-wrap">
+          <div class="metric-bar" style="--w:91%"></div>
+          <span>Pass threshold: 25 dB</span>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon">✅</div>
+        <h3>Final Accuracy</h3>
+        <div class="metric-formula">accuracy = improved / total × 100</div>
+        <p>Percentage of frames where both SSIM and PSNR exceed their thresholds after motion correction is applied.</p>
+        <div class="metric-bar-wrap">
+          <div class="metric-bar accent" style="--w:96%"></div>
+          <span>Target: &gt; 90%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH STACK -->
+  <section class="section tech-section">
+    <div class="section-label">Dependencies</div>
+    <h2 class="section-title">Technology <span class="gradient-text">Stack</span></h2>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-logo cv">CV2</div>
+        <div class="tech-info">
+          <h4>OpenCV</h4>
+          <p>Optical flow, remap, video I/O, CLAHE</p>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-logo np">NP</div>
+        <div class="tech-info">
+          <h4>NumPy</h4>
+          <p>Array operations, threshold computation</p>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-logo sk">SK</div>
+        <div class="tech-info">
+          <h4>scikit-image</h4>
+          <p>SSIM computation between frame pairs</p>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-logo mp">PLT</div>
+        <div class="tech-info">
+          <h4>Matplotlib</h4>
+          <p>Motion graphs, sample frame visualization</p>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-logo pd">PD</div>
+        <div class="tech-info">
+          <h4>Pandas</h4>
+          <p>Metrics DataFrame table output</p>
+        </div>
+      </div>
+      <div class="tech-card">
+        <div class="tech-logo ff">FF</div>
+        <div class="tech-info">
+          <h4>FFmpeg</h4>
+          <p>AVI → MP4 H.264 transcoding (CRF 17)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CODE SECTION -->
+  <section class="section code-section" id="code">
+    <div class="section-label">Source Code</div>
+    <h2 class="section-title">Full <span class="gradient-text">Pipeline</span> Code</h2>
+    <p class="section-sub">Copy and run directly in Google Colab. All dependencies are installed automatically.</p>
+
+    <div class="code-container">
+      <div class="code-tabs">
+        <button class="tab-btn active" data-tab="install" id="tab-install">Install</button>
+        <button class="tab-btn" data-tab="preprocess" id="tab-preprocess">Preprocess</button>
+        <button class="tab-btn" data-tab="motion" id="tab-motion">Motion Detection</button>
+        <button class="tab-btn" data-tab="correct" id="tab-correct">Correction</button>
+        <button class="tab-btn" data-tab="accuracy" id="tab-accuracy">Accuracy</button>
+        <button class="tab-btn" data-tab="output" id="tab-output">Output</button>
+      </div>
+
+      <div class="code-body">
+        <div class="code-toolbar">
+          <span class="code-filename" id="code-filename">install.py</span>
+          <button class="copy-btn" id="copy-btn" onclick="copyCode()">
+            <span id="copy-icon">⧉</span> Copy
+          </button>
+        </div>
+        <pre class="code-block" id="code-display"><code id="code-text"></code></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- RESULTS / OUTPUT -->
+  <section class="section results-section" id="results">
+    <div class="section-label">Expected Output</div>
+    <h2 class="section-title">Pipeline <span class="gradient-text">Results</span></h2>
+    <div class="results-grid">
+      <div class="result-card terminal">
+        <div class="terminal-bar">
+          <span class="dot red"></span><span class="dot yellow"></span><span class="dot green"></span>
+          <span class="terminal-title">Console Output</span>
+        </div>
+        <div class="terminal-body">
+          <div class="terminal-line"><span class="t-comment"># Stage 3</span></div>
+          <div class="terminal-line"><span class="t-ok">✓</span> Preprocessing Done</div>
+          <div class="terminal-line" style="margin-top:8px"><span class="t-comment"># Stage 5</span></div>
+          <div class="terminal-line"><span class="t-ok">✓</span> Motion Correction Done</div>
+          <div class="terminal-line" style="margin-top:8px"><span class="t-comment"># Stage 6</span></div>
+          <div class="terminal-line"><span class="t-key">Average SSIM:</span> <span class="t-val">0.9234</span></div>
+          <div class="terminal-line"><span class="t-key">Average PSNR:</span> <span class="t-val">31.47 dB</span></div>
+          <div class="terminal-line"><span class="t-key">Final Improved Accuracy:</span> <span
+              class="t-accent">92.86%</span></div>
+          <div class="terminal-line" style="margin-top:8px"><span class="t-comment"># Stage 8</span></div>
+          <div class="terminal-line"><span class="t-ok">📊</span> Sample Metrics Table</div>
+          <div class="terminal-line t-table"> Frame SSIM PSNR</div>
+          <div class="terminal-line t-table">0 1 0.931 32.10</div>
+          <div class="terminal-line t-table">1 2 0.918 30.85</div>
+          <div class="terminal-line t-table">2 3 0.921 31.46</div>
+          <div class="terminal-line" style="margin-top:8px"><span class="t-ok">🎉</span> <span class="t-accent">FINAL
+              PROJECT COMPLETE</span></div>
+        </div>
+      </div>
+
+      <div class="result-card outputs-list">
+        <h3>Generated Outputs</h3>
+        <div class="output-item">
+          <div class="output-icon">📂</div>
+          <div class="output-detail">
+            <strong>processed_frames/</strong>
+            <span>Preprocessed PNG images, one per input frame</span>
+          </div>
+        </div>
+        <div class="output-item">
+          <div class="output-icon">📈</div>
+          <div class="output-detail">
+            <strong>Motion Graph</strong>
+            <span>Matplotlib plot with adaptive threshold line</span>
+          </div>
+        </div>
+        <div class="output-item">
+          <div class="output-icon">🖼️</div>
+          <div class="output-detail">
+            <strong>Sample Comparison Panel</strong>
+            <span>2×3 grid: Original vs Corrected for 3 frames</span>
+          </div>
+        </div>
+        <div class="output-item">
+          <div class="output-icon">📋</div>
+          <div class="output-detail">
+            <strong>Metrics Table</strong>
+            <span>Pandas DataFrame with SSIM & PSNR per sample</span>
+          </div>
+        </div>
+        <div class="output-item">
+          <div class="output-icon">🎬</div>
+          <div class="output-detail">
+            <strong>final.mp4</strong>
+            <span>H.264 annotated comparison video (auto-download)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW TO RUN -->
+  <section class="section how-section">
+    <div class="section-label">Quick Start</div>
+    <h2 class="section-title">Run in <span class="gradient-text">3 Steps</span></h2>
+    <div class="steps-row">
+      <div class="step">
+        <div class="step-num">1</div>
+        <h4>Open Google Colab</h4>
+        <p>Go to <a href="https://colab.research.google.com" target="_blank">colab.research.google.com</a> and create a
+          new notebook with a GPU runtime (optional but faster).</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <h4>Paste the Code</h4>
+        <p>Copy the full pipeline source from the Code section above and paste it into a single cell in your Colab
+          notebook.</p>
+      </div>
+      <div class="step-connector"></div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <h4>Upload &amp; Run</h4>
+        <p>Execute the cell. A file upload dialog will appear — select your ZIP, video, or image dataset. The pipeline
+          runs end-to-end and downloads <code>final.mp4</code> automatically.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-logo">
+        <span class="logo-icon">⬡</span>
+        <span class="logo-text">MotionCure</span>
+      </div>
+      <p class="footer-desc">Hybrid Motion Detection & Correction Pipeline · Improved Accuracy Version</p>
+      <div class="footer-tags">
+        <span>OpenCV</span><span>Optical
+          Flow</span><span>SSIM</span><span>PSNR</span><span>CLAHE</span><span>FFmpeg</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MotionCure — Run Pipeline</title>
+  <meta name="description" content="Upload your dataset and run the hybrid motion correction pipeline in your browser." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+/* ─────────────────────────────────────────────────────────────────────────── */
+/* BASE                                                                        */
+/* ─────────────────────────────────────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050811;--bg2:#0c1120;--bg3:#0f1628;
+  --border:rgba(99,179,237,0.12);--border-hi:rgba(99,179,237,0.35);
+  --cyan:#00d9ff;--blue:#63b3ed;--purple:#9f7aea;
+  --green:#48bb78;--red:#fc8181;--orange:#ed8936;--yellow:#fbd38d;
+  --text:#e2e8f0;--muted:#718096;--dim:#4a5568;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:14px;--r-sm:8px;
+}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font);background:var(--bg);color:var(--text);
+  line-height:1.6;overflow-x:hidden;min-height:100vh;
+}
+
+/* ─── GRID BG ─── */
+.bg-grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:
+    linear-gradient(rgba(99,179,237,.04)1px,transparent 1px),
+    linear-gradient(90deg,rgba(99,179,237,.04)1px,transparent 1px);
+  background-size:56px 56px;
+}
+.orb{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(90px);opacity:.14;animation:drift 14s ease-in-out infinite alternate}
+.o1{width:480px;height:480px;top:-120px;left:-80px;background:radial-gradient(circle,#63b3ed,transparent 70%)}
+.o2{width:360px;height:360px;top:50%;right:-80px;background:radial-gradient(circle,#9f7aea,transparent 70%);animation-delay:-5s}
+.o3{width:300px;height:300px;bottom:5%;left:35%;background:radial-gradient(circle,#00d9ff,transparent 70%);animation-delay:-9s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(28px,-36px) scale(1.07)}}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:1000;
+  background:rgba(5,8,17,.75);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.nav-inner{
+  max-width:1280px;margin:0 auto;padding:0 24px;
+  display:flex;align-items:center;height:60px;gap:16px;
+}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;letter-spacing:-.02em;text-decoration:none;color:var(--text)}
+.logo-hex{font-size:1.3rem;color:var(--cyan)}
+.nav-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,217,255,.08);border:1px solid rgba(0,217,255,.2);
+  color:var(--cyan);border-radius:40px;padding:4px 14px;font-size:.78rem;font-weight:600;margin-left:8px;
+}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.nav-right{margin-left:auto;display:flex;gap:10px;align-items:center}
+.btn-nav-ghost{
+  color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;
+  padding:6px 14px;border-radius:7px;border:1px solid transparent;
+  transition:all .2s;
+}
+.btn-nav-ghost:hover{color:var(--text);border-color:var(--border-hi);background:rgba(255,255,255,.04)}
+
+/* ─── LAYOUT ─── */
+.wrap{max-width:1280px;margin:0 auto;padding:80px 24px 60px;position:relative;z-index:1}
+
+/* ─── SECTION HELPERS ─── */
+.chip{
+  font-size:.72rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--cyan);margin-bottom:10px;display:block;
+}
+.section-title{font-size:clamp(1.6rem,3.2vw,2.4rem);font-weight:800;letter-spacing:-.03em;margin-bottom:6px}
+.grad{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* ─── HERO MINI ─── */
+.hero-mini{text-align:center;margin-bottom:60px;padding-top:20px}
+.hero-mini h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:900;letter-spacing:-.04em;margin-bottom:12px}
+.hero-mini p{color:var(--muted);font-size:1rem;max-width:520px;margin:0 auto}
+
+/* ─── UPLOAD ZONE ─── */
+.upload-section{margin-bottom:36px}
+.drop-zone{
+  border:2px dashed var(--border-hi);border-radius:var(--r);
+  padding:56px 32px;text-align:center;cursor:pointer;
+  background:rgba(99,179,237,.03);
+  transition:all .3s;position:relative;overflow:hidden;
+}
+.drop-zone::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(0,217,255,.04),rgba(159,122,234,.04));
+  opacity:0;transition:opacity .3s;
+}
+.drop-zone:hover,.drop-zone.drag-over{
+  border-color:var(--cyan);background:rgba(0,217,255,.06);
+}
+.drop-zone:hover::before,.drop-zone.drag-over::before{opacity:1}
+.drop-icon{font-size:3.2rem;margin-bottom:16px;display:block;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.drop-title{font-size:1.25rem;font-weight:700;margin-bottom:8px}
+.drop-sub{color:var(--muted);font-size:.88rem;margin-bottom:20px}
+.drop-tags{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.drop-tag{
+  font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:40px;
+  border:1px solid var(--border);color:var(--muted);background:rgba(255,255,255,.03);
+}
+.btn-browse{
+  background:rgba(0,217,255,.1);border:1px solid rgba(0,217,255,.25);
+  color:var(--cyan);padding:10px 28px;border-radius:8px;
+  font-size:.88rem;font-weight:600;cursor:pointer;font-family:var(--font);
+  transition:all .2s;
+}
+.btn-browse:hover{background:rgba(0,217,255,.2);box-shadow:0 0 20px rgba(0,217,255,.2)}
+#file-input{display:none}
+
+/* ─── FILE LIST ─── */
+.file-list{
+  display:none;flex-direction:column;gap:8px;margin-top:16px;
+}
+.file-item{
+  display:flex;align-items:center;gap:12px;
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:12px 16px;
+}
+.file-item-icon{font-size:1.3rem;flex-shrink:0}
+.file-item-info{flex:1;min-width:0}
+.file-item-name{font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file-item-size{font-size:.76rem;color:var(--muted)}
+.file-item-remove{
+  background:none;border:none;color:var(--muted);cursor:pointer;
+  font-size:1.1rem;padding:2px 4px;border-radius:4px;
+  transition:color .15s;flex-shrink:0;
+}
+.file-item-remove:hover{color:var(--red)}
+
+/* ─── UPLOAD ACTIONS ─── */
+.upload-actions{
+  display:none;justify-content:space-between;align-items:center;
+  margin-top:16px;gap:12px;flex-wrap:wrap;
+}
+.frame-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(72,187,120,.08);border:1px solid rgba(72,187,120,.2);
+  color:var(--green);border-radius:8px;padding:8px 16px;font-size:.85rem;font-weight:600;
+}
+.btn-upload{
+  padding:12px 32px;border-radius:10px;font-size:.92rem;font-weight:700;
+  cursor:pointer;border:none;font-family:var(--font);
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  color:#050811;box-shadow:0 0 28px rgba(0,217,255,.28);
+  transition:all .25s;
+}
+.btn-upload:hover{transform:translateY(-2px);box-shadow:0 0 44px rgba(0,217,255,.45)}
+.btn-upload:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ─── PROGRESS PANEL ─── */
+#progress-panel{display:none}
+.progress-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:32px;margin-bottom:28px;
+}
+.progress-header{
+  display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;
+}
+.progress-label{font-size:1rem;font-weight:700}
+.progress-pct{
+  font-family:var(--mono);font-size:1.1rem;font-weight:700;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.progress-bar-wrap{
+  height:8px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;margin-bottom:16px;
+}
+.progress-bar-fill{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--blue),var(--cyan));
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+  box-shadow:0 0 12px rgba(0,217,255,.5);
+  width:0%;
+}
+.progress-stage{font-size:.88rem;color:var(--muted);font-family:var(--mono)}
+
+/* Pipeline stage indicators */
+.pipeline-stages{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:24px;
+}
+.ps{
+  background:rgba(255,255,255,.02);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:12px;text-align:center;transition:all .4s;
+}
+.ps.active{border-color:rgba(0,217,255,.4);background:rgba(0,217,255,.06);box-shadow:0 0 16px rgba(0,217,255,.1)}
+.ps.done{border-color:rgba(72,187,120,.3);background:rgba(72,187,120,.05)}
+.ps-icon{font-size:1.4rem;margin-bottom:6px;display:block}
+.ps-name{font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.ps.active .ps-name{color:var(--cyan)}
+.ps.done  .ps-name{color:var(--green)}
+
+/* ─── RESULTS ─── */
+#results-panel{display:none}
+
+.metrics-row{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:28px;
+}
+.metric-box{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  padding:24px;text-align:center;transition:all .3s;
+}
+.metric-box:hover{border-color:var(--border-hi);transform:translateY(-2px)}
+.metric-box-icon{font-size:2rem;margin-bottom:10px;display:block}
+.metric-box-val{
+  font-size:2.2rem;font-weight:900;letter-spacing:-.04em;display:block;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.metric-box-val.accent-green{background:linear-gradient(135deg,var(--green),var(--cyan));-webkit-background-clip:text;background-clip:text;}
+.metric-box-val.accent-purple{background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;background-clip:text;}
+.metric-box-val.accent-orange{background:linear-gradient(135deg,var(--orange),var(--yellow));-webkit-background-clip:text;background-clip:text;}
+.metric-box-label{font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:4px}
+
+/* ─── MOTION GRAPH ─── */
+.graph-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;margin-bottom:28px;
+}
+.card-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 22px;border-bottom:1px solid var(--border);
+}
+.card-head h3{font-size:.95rem;font-weight:700}
+.thresholds{display:flex;gap:20px}
+.th-item{font-size:.75rem;color:var(--muted)}
+.th-item span{color:var(--text);font-family:var(--mono);font-weight:600}
+.graph-img{display:block;width:100%;background:var(--bg2)}
+
+/* ─── SAMPLES ─── */
+.samples-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;
+  margin-bottom:28px;
+}
+.sample-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;transition:all .3s;
+}
+.sample-card:hover{border-color:var(--border-hi);transform:translateY(-2px)}
+.sample-card-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:14px 16px;border-bottom:1px solid var(--border);
+}
+.sample-frame-label{font-size:.8rem;font-weight:700}
+.artifact-badge{
+  font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:40px;
+  background:rgba(252,129,129,.12);border:1px solid rgba(252,129,129,.25);color:var(--red);
+}
+.ok-badge{
+  font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:40px;
+  background:rgba(72,187,120,.1);border:1px solid rgba(72,187,120,.2);color:var(--green);
+}
+.sample-imgs{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--border)}
+.sample-img-wrap{position:relative;background:var(--bg)}
+.sample-img-wrap img{display:block;width:100%;aspect-ratio:1;object-fit:cover}
+.sample-img-label{
+  position:absolute;bottom:6px;left:6px;
+  font-size:.65rem;font-weight:700;letter-spacing:.06em;
+  background:rgba(0,0,0,.7);padding:2px 7px;border-radius:4px;
+  color:white;
+}
+.sample-metrics-row{
+  display:flex;justify-content:space-around;padding:12px;border-top:1px solid var(--border);
+}
+.sample-metric{text-align:center}
+.sample-metric-val{font-family:var(--mono);font-size:.92rem;font-weight:700;display:block}
+.sample-metric-val.good{color:var(--green)}
+.sample-metric-val.warn{color:var(--orange)}
+.sample-metric-label{font-size:.68rem;color:var(--muted)}
+
+/* ─── DOWNLOAD / ACTIONS ─── */
+.result-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:40px}
+.btn-download{
+  display:inline-flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,var(--blue),var(--cyan));
+  color:#050811;padding:14px 32px;border-radius:10px;font-size:.95rem;font-weight:700;
+  text-decoration:none;cursor:pointer;border:none;font-family:var(--font);
+  box-shadow:0 0 30px rgba(0,217,255,.3);transition:all .25s;
+}
+.btn-download:hover{transform:translateY(-2px);box-shadow:0 0 48px rgba(0,217,255,.5)}
+.btn-reset{
+  display:inline-flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  color:var(--text);padding:14px 28px;border-radius:10px;font-size:.95rem;font-weight:600;
+  cursor:pointer;font-family:var(--font);transition:all .25s;
+}
+.btn-reset:hover{background:rgba(255,255,255,.1);border-color:var(--border-hi)}
+
+/* ─── ERROR PANEL ─── */
+#error-panel{display:none}
+.error-card{
+  background:rgba(252,129,129,.05);border:1px solid rgba(252,129,129,.2);
+  border-radius:var(--r);padding:28px;
+  display:flex;gap:18px;align-items:flex-start;
+}
+.error-icon{font-size:2rem;flex-shrink:0}
+.error-title{font-size:1rem;font-weight:700;color:var(--red);margin-bottom:6px}
+.error-msg{font-size:.88rem;color:var(--muted);font-family:var(--mono)}
+.btn-try-again{
+  margin-top:14px;
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(252,129,129,.1);border:1px solid rgba(252,129,129,.25);
+  color:var(--red);padding:8px 20px;border-radius:8px;font-size:.85rem;font-weight:600;
+  cursor:pointer;font-family:var(--font);transition:all .2s;
+}
+.btn-try-again:hover{background:rgba(252,129,129,.2)}
+
+/* ─── METRICS TABLE ─── */
+.metrics-table-wrap{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;margin-bottom:28px;
+}
+.metrics-table{width:100%;border-collapse:collapse}
+.metrics-table th{
+  padding:12px 20px;font-size:.75rem;font-weight:700;text-transform:uppercase;
+  letter-spacing:.1em;color:var(--muted);text-align:left;
+  border-bottom:1px solid var(--border);background:rgba(5,8,17,.5);
+}
+.metrics-table td{
+  padding:12px 20px;font-size:.88rem;font-family:var(--mono);
+  border-bottom:1px solid var(--border);
+}
+.metrics-table tr:last-child td{border-bottom:none}
+.metrics-table tr:hover td{background:rgba(255,255,255,.02)}
+.td-good{color:var(--green);font-weight:700}
+.td-ok{color:var(--yellow)}
+.td-artifact{color:var(--red)}
+
+/* ─── VIDEO PLAYER ─── */
+.video-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;margin-bottom:28px;
+}
+.vp-tabs{
+  display:flex;border-bottom:1px solid var(--border);
+  background:rgba(5,8,17,.6);
+}
+.vp-tab{
+  padding:12px 22px;font-size:.83rem;font-weight:600;cursor:pointer;
+  border:none;background:none;color:var(--muted);font-family:var(--font);
+  border-bottom:2px solid transparent;transition:color .2s;
+  margin-bottom:-1px;
+}
+.vp-tab.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+.vp-tab:hover{color:var(--text)}
+.vp-panel{display:none;padding:0}
+.vp-panel.active{display:block}
+
+/* Canvas player */
+.ctrl-bar{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  border-bottom:1px solid var(--border);flex-wrap:wrap;
+  background:rgba(5,8,17,.4);
+}
+.ctrl-btn{
+  background:rgba(0,217,255,.1);border:1px solid rgba(0,217,255,.2);
+  color:var(--cyan);padding:6px 16px;border-radius:7px;
+  font-size:.82rem;font-weight:600;cursor:pointer;font-family:var(--font);
+  transition:all .2s;
+}
+.ctrl-btn:hover{background:rgba(0,217,255,.22)}
+.ctrl-btn.active-stop{background:rgba(252,129,129,.1);border-color:rgba(252,129,129,.25);color:var(--red)}
+.speed-sel{
+  background:var(--bg);border:1px solid var(--border);
+  color:var(--text);padding:5px 10px;border-radius:6px;
+  font-size:.82rem;font-family:var(--font);cursor:pointer;
+}
+.frame-info{
+  font-family:var(--mono);font-size:.78rem;color:var(--muted);margin-left:auto;
+}
+.scrubber{
+  width:100%;-webkit-appearance:none;appearance:none;
+  height:4px;background:rgba(255,255,255,.08);border-radius:99px;outline:none;
+  cursor:pointer;margin:0 16px 12px;
+}
+.scrubber::-webkit-slider-thumb{
+  -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--cyan);cursor:pointer;box-shadow:0 0 8px rgba(0,217,255,.5);
+}
+.canvas-wrap{background:#000;display:flex;justify-content:center;align-items:center;min-height:200px}
+#vp-canvas{display:block;max-width:100%;height:auto}
+
+/* Native video */
+.native-video-wrap{padding:0}
+#native-video{
+  display:block;width:100%;height:auto;background:#000;
+  max-height:480px;
+}
+.vp-footer{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;font-size:.78rem;color:var(--muted);
+  border-top:1px solid var(--border);
+}
+.btn-dl-sm{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(0,217,255,.08);border:1px solid rgba(0,217,255,.2);
+  color:var(--cyan);padding:5px 14px;border-radius:7px;
+  font-size:.78rem;font-weight:600;text-decoration:none;
+  transition:all .2s;
+}
+.btn-dl-sm:hover{background:rgba(0,217,255,.18)}
+
+/* ─── SCROLLBAR ─── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:640px){
+  .upload-actions{flex-direction:column}
+  .pipeline-stages{grid-template-columns:repeat(3,1fr)}
+  .metrics-row{grid-template-columns:1fr 1fr}
+}
+  </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<div class="orb o3"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <span class="logo-hex">⬡</span> MotionCure
+    </a>
+    <span class="nav-pill"><span class="nav-dot"></span> Live Pipeline</span>
+    <div class="nav-right">
+      <a href="index.html" class="btn-nav-ghost">← Docs</a>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="wrap">
+
+  <!-- HERO MINI -->
+  <div class="hero-mini">
+    <span class="chip">Hybrid Motion Correction Engine · v2.0</span>
+    <h1>Upload &amp; <span class="grad">Run Pipeline</span></h1>
+    <p>Drop your image dataset, ZIP archive, or video file — the pipeline runs server-side and returns corrected frames, metrics and an annotated video.</p>
+  </div>
+
+  <!-- ── UPLOAD SECTION ── -->
+  <div class="upload-section">
+    <span class="chip">Step 1 — Dataset</span>
+
+    <div class="drop-zone" id="drop-zone">
+      <span class="drop-icon">📂</span>
+      <div class="drop-title">Drop your dataset here</div>
+      <div class="drop-sub">Or click to browse files from your computer</div>
+      <div class="drop-tags">
+        <span class="drop-tag">PNG / JPG / BMP</span>
+        <span class="drop-tag">MP4 / AVI</span>
+        <span class="drop-tag">ZIP archive</span>
+        <span class="drop-tag">Multiple files OK</span>
+      </div>
+      <button class="btn-browse" id="browse-btn">Choose Files</button>
+      <input type="file" id="file-input" multiple accept=".png,.jpg,.jpeg,.bmp,.tiff,.tif,.mp4,.avi,.mov,.mkv,.zip" />
+    </div>
+
+    <div class="file-list" id="file-list"></div>
+
+    <div class="upload-actions" id="upload-actions">
+      <span class="frame-badge" id="frame-badge">
+        📁 <span id="file-count">0</span> file(s) selected
+      </span>
+      <button class="btn-upload" id="upload-btn">
+        ⬆ Upload &amp; Prepare Dataset
+      </button>
+    </div>
+  </div>
+
+  <!-- ── RUN SECTION ── -->
+  <div id="run-section" style="display:none;margin-bottom:36px">
+    <span class="chip">Step 2 — Execute</span>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div class="frame-badge">
+        🖼 <span id="server-frame-count">0</span> frames ready
+      </div>
+      <button class="btn-upload" id="run-btn" style="background:linear-gradient(135deg,#9f7aea,#00d9ff)">
+        ▶ Run Motion Correction
+      </button>
+    </div>
+  </div>
+
+  <!-- ── PROGRESS ── -->
+  <div id="progress-panel">
+    <span class="chip">Processing</span>
+    <div class="progress-card">
+      <div class="progress-header">
+        <span class="progress-label" id="progress-label">Initialising…</span>
+        <span class="progress-pct" id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-fill" id="progress-fill"></div>
+      </div>
+      <div class="progress-stage" id="progress-stage">Please wait…</div>
+
+      <div class="pipeline-stages" id="pipeline-stages">
+        <div class="ps" id="ps-1" data-from="0"  data-to="20"><span class="ps-icon">🧹</span><div class="ps-name">Preprocess</div></div>
+        <div class="ps" id="ps-2" data-from="20" data-to="50"><span class="ps-icon">🌊</span><div class="ps-name">Opt. Flow</div></div>
+        <div class="ps" id="ps-3" data-from="50" data-to="65"><span class="ps-icon">🩹</span><div class="ps-name">Correction</div></div>
+        <div class="ps" id="ps-4" data-from="65" data-to="75"><span class="ps-icon">📊</span><div class="ps-name">Accuracy</div></div>
+        <div class="ps" id="ps-5" data-from="75" data-to="82"><span class="ps-icon">📈</span><div class="ps-name">Graph</div></div>
+        <div class="ps" id="ps-6" data-from="82" data-to="95"><span class="ps-icon">🖼️</span><div class="ps-name">Samples</div></div>
+        <div class="ps" id="ps-7" data-from="95" data-to="100"><span class="ps-icon">🎬</span><div class="ps-name">Video</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── ERROR ── -->
+  <div id="error-panel">
+    <div class="error-card">
+      <div class="error-icon">⚠️</div>
+      <div>
+        <div class="error-title">Pipeline Error</div>
+        <div class="error-msg" id="error-msg">Unknown error.</div>
+        <button class="btn-try-again" onclick="doReset()">↺ Start Over</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS ── -->
+  <div id="results-panel">
+    <span class="chip">Results</span>
+
+    <!-- Metrics Row -->
+    <div class="metrics-row" id="metrics-row">
+      <div class="metric-box">
+        <span class="metric-box-icon">🎯</span>
+        <span class="metric-box-val accent-green" id="r-accuracy">—</span>
+        <div class="metric-box-label">Final Accuracy</div>
+      </div>
+      <div class="metric-box">
+        <span class="metric-box-icon">🔁</span>
+        <span class="metric-box-val" id="r-ssim">—</span>
+        <div class="metric-box-label">Average SSIM</div>
+      </div>
+      <div class="metric-box">
+        <span class="metric-box-icon">📡</span>
+        <span class="metric-box-val accent-purple" id="r-psnr">—</span>
+        <div class="metric-box-label">Average PSNR (dB)</div>
+      </div>
+      <div class="metric-box">
+        <span class="metric-box-icon">🛡️</span>
+        <span class="metric-box-val accent-orange" id="r-improved">—</span>
+        <div class="metric-box-label">Frames Improved</div>
+      </div>
+      <div class="metric-box">
+        <span class="metric-box-icon">⚠️</span>
+        <span class="metric-box-val" style="background:linear-gradient(135deg,var(--red),var(--orange));-webkit-background-clip:text;background-clip:text" id="r-artifacts">—</span>
+        <div class="metric-box-label">Artifacts Detected</div>
+      </div>
+      <div class="metric-box">
+        <span class="metric-box-icon">🖼</span>
+        <span class="metric-box-val" id="r-total">—</span>
+        <div class="metric-box-label">Total Frames</div>
+      </div>
+    </div>
+
+    <!-- Motion Graph -->
+    <div class="graph-card" id="graph-card" style="display:none">
+      <div class="card-head">
+        <h3>📈 Motion Magnitude Graph</h3>
+        <div class="thresholds">
+          <div class="th-item">Flow threshold: <span id="th-motion">—</span></div>
+          <div class="th-item">SSIM threshold: <span id="th-ssim">—</span></div>
+        </div>
+      </div>
+      <img class="graph-img" id="graph-img" alt="Motion graph" />
+    </div>
+
+    <!-- Sample comparisons -->
+    <div id="samples-section" style="display:none;margin-bottom:10px">
+      <span class="chip">Original vs Corrected — Sample Frames</span>
+      <div class="samples-grid" id="samples-grid"></div>
+    </div>
+
+    <!-- Metrics table -->
+    <div id="table-section" style="display:none;margin-bottom:28px">
+      <span class="chip">Per-Sample Metrics</span>
+      <div class="metrics-table-wrap">
+        <table class="metrics-table" id="metrics-table">
+          <thead>
+            <tr>
+              <th>Frame</th>
+              <th>SSIM</th>
+              <th>PSNR (dB)</th>
+              <th>Artifact</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="metrics-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Video Player -->
+    <div id="video-section" style="display:none;margin-bottom:28px">
+      <span class="chip">Video Preview</span>
+      <div class="video-card">
+        <div class="vp-tabs">
+          <button class="vp-tab active" id="tab-canvas" onclick="switchVpTab('canvas')">🎞 Frame Animation</button>
+          <button class="vp-tab" id="tab-native" onclick="switchVpTab('native')">▶ Native Player</button>
+        </div>
+
+        <!-- Canvas Panel -->
+        <div class="vp-panel active" id="vp-canvas-panel">
+          <div class="ctrl-bar">
+            <button class="ctrl-btn" id="vp-play-btn" onclick="vpTogglePlay()">▶ Play</button>
+            <button class="ctrl-btn" onclick="vpStepFrame(-1)">⏮ Prev</button>
+            <button class="ctrl-btn" onclick="vpStepFrame(1)">Next ⏭</button>
+            <select class="speed-sel" id="vp-speed" onchange="vpChangeSpeed()">
+              <option value="800">0.5×</option>
+              <option value="400" selected>1×</option>
+              <option value="200">2×</option>
+              <option value="100">4×</option>
+            </select>
+            <span class="frame-info" id="vp-frame-info">Frame 0 / 0</span>
+          </div>
+          <input type="range" class="scrubber" id="vp-scrubber" min="0" value="0" oninput="vpSeek(this.value)" />
+          <div class="canvas-wrap">
+            <canvas id="vp-canvas"></canvas>
+          </div>
+          <div class="vp-footer">
+            <span>📽 Original (left) vs Corrected (right) — frame-by-frame preview</span>
+            <a href="/download" class="btn-dl-sm">⬇ Download Video</a>
+          </div>
+        </div>
+
+        <!-- Native Video Panel -->
+        <div class="vp-panel" id="vp-native-panel">
+          <div class="native-video-wrap">
+            <video id="native-video" controls preload="metadata" style="display:block;width:100%;background:#000;max-height:480px">
+              <source src="/video" type="video/mp4" />
+              <source src="/video" type="video/x-msvideo" />
+              <p style="padding:20px;color:var(--muted)">Your browser cannot play this format. Use the Frame Animation tab or download the file.</p>
+            </video>
+          </div>
+          <div class="vp-footer">
+            <span id="vp-native-note">🎬 Streaming from server — MP4 available when FFmpeg is installed</span>
+            <a href="/download" class="btn-dl-sm">⬇ Download</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Download / Reset -->
+    <div class="result-actions">
+      <a class="btn-download" id="download-btn" href="/download">
+        ⬇ Download Corrected Video (.avi)
+      </a>
+      <button class="btn-reset" onclick="doReset()">↺ Run Again</button>
+    </div>
+  </div>
+
+</div><!-- /.wrap -->
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<script>
+/* ── File selection ────────────────────────────────────────────────────── */
+const dropZone   = document.getElementById('drop-zone');
+const fileInput  = document.getElementById('file-input');
+const fileList   = document.getElementById('file-list');
+const uploadActs = document.getElementById('upload-actions');
+const fileCount  = document.getElementById('file-count');
+
+let selectedFiles = [];
+
+document.getElementById('browse-btn').onclick = e => { e.stopPropagation(); fileInput.click(); };
+dropZone.onclick = () => fileInput.click();
+
+fileInput.addEventListener('change', () => addFiles(fileInput.files));
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  addFiles(e.dataTransfer.files);
+});
+
+function addFiles(files) {
+  for (const f of files) {
+    if (!selectedFiles.some(sf => sf.name === f.name && sf.size === f.size)) {
+      selectedFiles.push(f);
+    }
+  }
+  renderFileList();
+}
+
+function renderFileList() {
+  fileList.innerHTML = '';
+  if (!selectedFiles.length) { fileList.style.display = 'none'; uploadActs.style.display = 'none'; return; }
+
+  fileList.style.display = 'flex';
+  uploadActs.style.display = 'flex';
+  fileCount.textContent = selectedFiles.length;
+
+  selectedFiles.forEach((f, i) => {
+    const ext  = f.name.split('.').pop().toUpperCase();
+    const icon = ['ZIP'].includes(ext) ? '🗜️' : ['MP4','AVI','MOV','MKV'].includes(ext) ? '🎬' : '🖼️';
+    const size = f.size > 1e6 ? `${(f.size/1e6).toFixed(1)} MB` : `${Math.round(f.size/1024)} KB`;
+
+    const div = document.createElement('div');
+    div.className = 'file-item';
+    div.innerHTML = `
+      <span class="file-item-icon">${icon}</span>
+      <div class="file-item-info">
+        <div class="file-item-name">${f.name}</div>
+        <div class="file-item-size">${size} · ${ext}</div>
+      </div>
+      <button class="file-item-remove" title="Remove">✕</button>`;
+    div.querySelector('.file-item-remove').onclick = () => {
+      selectedFiles.splice(i, 1);
+      renderFileList();
+    };
+    fileList.appendChild(div);
+  });
+}
+
+/* ── Upload ────────────────────────────────────────────────────────────── */
+document.getElementById('upload-btn').addEventListener('click', async () => {
+  if (!selectedFiles.length) return;
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+  btn.textContent = '⬆ Uploading…';
+
+  const fd = new FormData();
+  selectedFiles.forEach(f => fd.append('files', f));
+
+  try {
+    const res  = await fetch('/upload', { method: 'POST', body: fd });
+    const data = await res.json();
+
+    if (!data.success) throw new Error(data.error || 'Upload failed');
+
+    document.getElementById('server-frame-count').textContent = data.frame_count;
+    document.getElementById('run-section').style.display = 'block';
+    document.getElementById('upload-actions').style.display = 'none';
+    btn.disabled = false;
+    btn.innerHTML = '✓ Dataset Ready';
+  } catch (err) {
+    showError(err.message);
+    btn.disabled = false;
+    btn.innerHTML = '⬆ Retry Upload';
+  }
+});
+
+/* ── Run pipeline ──────────────────────────────────────────────────────── */
+document.getElementById('run-btn').addEventListener('click', async () => {
+  document.getElementById('run-section').style.display = 'none';
+  document.getElementById('progress-panel').style.display = 'block';
+  document.getElementById('results-panel').style.display  = 'none';
+  document.getElementById('error-panel').style.display    = 'none';
+
+  try {
+    const res  = await fetch('/run', { method: 'POST' });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Could not start pipeline.');
+    pollStatus();
+  } catch (err) {
+    showError(err.message);
+  }
+});
+
+/* ── Status polling ────────────────────────────────────────────────────── */
+let pollTimer = null;
+
+function pollStatus() {
+  clearTimeout(pollTimer);
+  pollTimer = setTimeout(async () => {
+    try {
+      const res  = await fetch('/status');
+      const data = await res.json();
+      updateUI(data);
+      if (data.status !== 'done' && data.status !== 'error') {
+        pollStatus();
+      }
+    } catch {
+      pollStatus(); // retry on network blip
+    }
+  }, 600);
+}
+
+/* ── Update UI from state ──────────────────────────────────────────────── */
+function updateUI(s) {
+  // Progress
+  const pct = Math.round(s.progress || 0);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent  = pct + '%';
+  document.getElementById('progress-stage').textContent = s.stage || '…';
+  document.getElementById('progress-label').textContent =
+    s.status === 'processing' ? 'Pipeline running…' : s.stage || '…';
+
+  // Stage cards
+  document.querySelectorAll('.ps').forEach(el => {
+    const from = +el.dataset.from, to = +el.dataset.to;
+    el.classList.remove('active', 'done');
+    if (pct >= to)   el.classList.add('done');
+    else if (pct >= from) el.classList.add('active');
+  });
+
+  if (s.status === 'done' && s.metrics) {
+    showResults(s.metrics);
+  }
+  if (s.status === 'error') {
+    showError(s.error || 'Unknown error.');
+  }
+}
+
+/* ── Show results ──────────────────────────────────────────────────────── */
+function showResults(m) {
+  document.getElementById('progress-panel').style.display = 'none';
+  document.getElementById('results-panel').style.display  = 'block';
+
+  document.getElementById('r-accuracy').textContent = m.accuracy + '%';
+  document.getElementById('r-ssim').textContent     = m.avg_ssim;
+  document.getElementById('r-psnr').textContent     = m.avg_psnr + ' dB';
+  document.getElementById('r-improved').textContent = m.improved_count;
+  document.getElementById('r-artifacts').textContent = m.artifact_count;
+  document.getElementById('r-total').textContent    = m.total_frames;
+
+  // Graph
+  if (m.motion_graph) {
+    document.getElementById('graph-card').style.display = 'block';
+    document.getElementById('graph-img').src = 'data:image/png;base64,' + m.motion_graph;
+    document.getElementById('th-motion').textContent = m.threshold_motion;
+    document.getElementById('th-ssim').textContent   = m.threshold_ssim;
+  }
+
+  // Samples
+  if (m.samples && m.samples.length) {
+    document.getElementById('samples-section').style.display = 'block';
+    document.getElementById('table-section').style.display   = 'block';
+
+    const grid  = document.getElementById('samples-grid');
+    const tbody = document.getElementById('metrics-tbody');
+    grid.innerHTML  = '';
+    tbody.innerHTML = '';
+
+    m.samples.forEach(s => {
+      const ssimOk = s.ssim > 0.75;
+      const psnrOk = s.psnr > 25;
+      const good   = ssimOk && psnrOk;
+
+      // Card
+      const card = document.createElement('div');
+      card.className = 'sample-card';
+      card.innerHTML = `
+        <div class="sample-card-head">
+          <span class="sample-frame-label">Frame ${s.frame}</span>
+          <span class="${s.artifact ? 'artifact-badge' : 'ok-badge'}">${s.artifact ? '⚠ Artifact' : '✓ Clean'}</span>
+        </div>
+        <div class="sample-imgs">
+          <div class="sample-img-wrap">
+            <img src="data:image/jpeg;base64,${s.original}" alt="Original frame ${s.frame}" loading="lazy" />
+            <div class="sample-img-label">ORIGINAL</div>
+          </div>
+          <div class="sample-img-wrap">
+            <img src="data:image/jpeg;base64,${s.corrected}" alt="Corrected frame ${s.frame}" loading="lazy" />
+            <div class="sample-img-label">CORRECTED</div>
+          </div>
+        </div>
+        <div class="sample-metrics-row">
+          <div class="sample-metric">
+            <span class="sample-metric-val ${ssimOk ? 'good' : 'warn'}">${s.ssim}</span>
+            <div class="sample-metric-label">SSIM</div>
+          </div>
+          <div class="sample-metric">
+            <span class="sample-metric-val ${psnrOk ? 'good' : 'warn'}">${s.psnr} dB</span>
+            <div class="sample-metric-label">PSNR</div>
+          </div>
+          <div class="sample-metric">
+            <span class="sample-metric-val ${good ? 'good' : 'warn'}">${good ? '✓ Improved' : '~ Partial'}</span>
+            <div class="sample-metric-label">Status</div>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+
+      // Table row
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${s.frame}</td>
+        <td class="${ssimOk ? 'td-good' : 'td-ok'}">${s.ssim}</td>
+        <td class="${psnrOk ? 'td-good' : 'td-ok'}">${s.psnr}</td>
+        <td class="${s.artifact ? 'td-artifact' : 'td-good'}">${s.artifact ? 'Yes' : 'No'}</td>
+        <td class="${good ? 'td-good' : 'td-ok'}">${good ? 'Improved' : 'Partial'}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  // Video player
+  if (m.preview_frames && m.preview_frames.length) {
+    initVideoPlayer(m.preview_frames, m.has_mp4 || false);
+  }
+
+  // Scroll to results
+  document.getElementById('results-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* ── Show error ────────────────────────────────────────────────────────── */
+function showError(msg) {
+  document.getElementById('progress-panel').style.display = 'none';
+  document.getElementById('error-panel').style.display    = 'block';
+  document.getElementById('error-msg').textContent        = msg;
+}
+
+/* ── Video Player ──────────────────────────────────────────────────────── */
+let vpFrames = [];
+let vpIdx    = 0;
+let vpTimer  = null;
+let vpImages = [];
+let vpLoaded = 0;
+
+function switchVpTab(tab) {
+  ['canvas','native'].forEach(t => {
+    document.getElementById('vp-'+t+'-panel').classList.toggle('active', t === tab);
+    document.getElementById('tab-'+t).classList.toggle('active', t === tab);
+  });
+}
+
+function initVideoPlayer(frames, hasMp4) {
+  vpFrames = frames;
+  vpIdx    = 0;
+  vpLoaded = 0;
+  vpImages = [];
+  document.getElementById('video-section').style.display = 'block';
+
+  const scrubber = document.getElementById('vp-scrubber');
+  scrubber.max   = Math.max(0, frames.length - 1);
+  scrubber.value = 0;
+  document.getElementById('vp-frame-info').textContent = `Frame 1 / ${frames.length}`;
+
+  // Preload all frames as Image objects for smooth playback
+  frames.forEach((b64, i) => {
+    const img = new Image();
+    img.onload = () => {
+      vpLoaded++;
+      if (i === 0) vpDrawFrame(0);
+    };
+    img.src = 'data:image/jpeg;base64,' + b64;
+    vpImages.push(img);
+  });
+
+  // Native video tab
+  if (hasMp4) {
+    document.getElementById('vp-native-note').textContent = '🎬 H.264 MP4 — plays natively in browser';
+  }
+  // Reload native video src
+  const nv = document.getElementById('native-video');
+  nv.load();
+}
+
+function vpDrawFrame(idx) {
+  if (!vpImages[idx] || !vpImages[idx].complete) return;
+  const canvas = document.getElementById('vp-canvas');
+  const ctx    = canvas.getContext('2d');
+  const img    = vpImages[idx];
+  canvas.width  = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  ctx.drawImage(img, 0, 0);
+
+  vpIdx = idx;
+  document.getElementById('vp-scrubber').value  = idx;
+  document.getElementById('vp-frame-info').textContent = `Frame ${idx + 1} / ${vpFrames.length}`;
+}
+
+function vpTogglePlay() {
+  const btn = document.getElementById('vp-play-btn');
+  if (vpTimer) {
+    clearInterval(vpTimer);
+    vpTimer = null;
+    btn.textContent = '▶ Play';
+    btn.classList.remove('active-stop');
+  } else {
+    const ms = parseInt(document.getElementById('vp-speed').value);
+    vpTimer = setInterval(() => {
+      const next = (vpIdx + 1) % vpFrames.length;
+      vpDrawFrame(next);
+    }, ms);
+    btn.textContent = '⏸ Pause';
+    btn.classList.add('active-stop');
+  }
+}
+
+function vpStepFrame(dir) {
+  if (vpTimer) { clearInterval(vpTimer); vpTimer = null;
+    document.getElementById('vp-play-btn').textContent = '▶ Play';
+    document.getElementById('vp-play-btn').classList.remove('active-stop');
+  }
+  const next = (vpIdx + dir + vpFrames.length) % vpFrames.length;
+  vpDrawFrame(next);
+}
+
+function vpSeek(val) {
+  vpDrawFrame(parseInt(val));
+}
+
+function vpChangeSpeed() {
+  if (vpTimer) {
+    clearInterval(vpTimer);
+    const ms = parseInt(document.getElementById('vp-speed').value);
+    vpTimer = setInterval(() => {
+      const next = (vpIdx + 1) % vpFrames.length;
+      vpDrawFrame(next);
+    }, ms);
+  }
+}
+
+/* ── Reset ─────────────────────────────────────────────────────────────── */
+async function doReset() {
+  clearTimeout(pollTimer);
+  await fetch('/reset', { method: 'POST' }).catch(() => {});
+
+  selectedFiles = [];
+  renderFileList();
+
+  ['progress-panel','results-panel','error-panel','run-section'].forEach(id => {
+    document.getElementById(id).style.display = 'none';
+  });
+  document.getElementById('progress-fill').style.width = '0%';
+  document.getElementById('progress-pct').textContent  = '0%';
+  document.querySelectorAll('.ps').forEach(el => el.classList.remove('active','done'));
+
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = false;
+  btn.innerHTML = '⬆ Upload &amp; Prepare Dataset';
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>
