@@ -26,7 +26,9 @@ html{scroll-behavior:smooth}
 body{
   font-family:var(--font);background:var(--bg);color:var(--text);
   line-height:1.6;overflow-x:hidden;min-height:100vh;
+  scrollbar-width:none;
 }
+body::-webkit-scrollbar{display:none}
 
 /* ─── GRID BG ─── */
 .bg-grid{
@@ -489,9 +491,9 @@ nav{
 .btn-dl-sm:hover{background:rgba(0,217,255,.18)}
 
 /* ─── SCROLLBAR ─── */
-::-webkit-scrollbar{width:6px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+::-webkit-scrollbar{width:0;display:none}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:transparent}
 
 /* ─── RESPONSIVE ─── */
 @media(max-width:640px){
