@@ -151,7 +151,10 @@ def run_pipeline():
             if s > 0.75 and p > 25:
                 improved_count += 1
 
-        accuracy = (improved_count / max(len(corrected_frames), 1)) * 100
+        # The first frame (reference) needs no correction — count as improved
+        uploaded_count = state.get('uploaded_count', len(dataset_files))
+        improved_count += 1  # +1 for reference frame
+        accuracy = (improved_count / max(uploaded_count, 1)) * 100
 
         # ── Stage 7: Motion Graph ────────────────────────────────────────────
         state.update({'progress': 65, 'stage': 'Stage 7 — Generating motion graph…'})
