@@ -22,13 +22,11 @@
   --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
   --r:14px;--r-sm:8px;
 }
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;overflow-x:hidden}
 body{
   font-family:var(--font);background:var(--bg);color:var(--text);
   line-height:1.6;overflow-x:hidden;min-height:100vh;
-  scrollbar-width:none;
 }
-body::-webkit-scrollbar{display:none}
 
 /* ─── GRID BG ─── */
 .bg-grid{
@@ -40,7 +38,7 @@ body::-webkit-scrollbar{display:none}
 }
 .orb{position:fixed;pointer-events:none;z-index:0;border-radius:50%;filter:blur(90px);opacity:.14;animation:drift 14s ease-in-out infinite alternate}
 .o1{width:480px;height:480px;top:-120px;left:-80px;background:radial-gradient(circle,#63b3ed,transparent 70%)}
-.o2{width:360px;height:360px;top:50%;right:-80px;background:radial-gradient(circle,#9f7aea,transparent 70%);animation-delay:-5s}
+.o2{width:360px;height:360px;top:50%;right:-120px;background:radial-gradient(circle,#9f7aea,transparent 70%);animation-delay:-5s}
 .o3{width:300px;height:300px;bottom:5%;left:35%;background:radial-gradient(circle,#00d9ff,transparent 70%);animation-delay:-9s}
 @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(28px,-36px) scale(1.07)}}
 
@@ -491,9 +489,10 @@ nav{
 .btn-dl-sm:hover{background:rgba(0,217,255,.18)}
 
 /* ─── SCROLLBAR ─── */
-::-webkit-scrollbar{width:0;display:none}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:transparent}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:rgba(99,179,237,.15);border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:rgba(99,179,237,.3)}
 
 /* ─── RESPONSIVE ─── */
 @media(max-width:640px){

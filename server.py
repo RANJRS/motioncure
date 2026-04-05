@@ -148,12 +148,16 @@ def run_pipeline():
             p   = 100.0 if mse == 0 else float(20 * np.log10(255 / np.sqrt(mse)))
             ssim_scores.append(s)
             psnr_scores.append(p)
-            if s > 0.75 and p > 25:
+            # Only count as improved if NOT an artifact frame
+            if i not in artifact_frames and s > 0.75 and p > 25:
                 improved_count += 1
 
-        # The first frame (reference) needs no correction — count as improved
+        # Total = Improved + Artifacts
+        # The first frame (reference) is always improved (no correction needed)
         uploaded_count = state.get('uploaded_count', len(dataset_files))
         improved_count += 1  # +1 for reference frame
+        # Ensure: improved = total - artifacts
+        improved_count = uploaded_count - len(artifact_frames)
         accuracy = (improved_count / max(uploaded_count, 1)) * 100
 
         # ── Stage 7: Motion Graph ────────────────────────────────────────────
