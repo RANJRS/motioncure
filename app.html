@@ -42,6 +42,20 @@ body{
 .o3{width:300px;height:300px;bottom:5%;left:35%;background:radial-gradient(circle,#00d9ff,transparent 70%);animation-delay:-9s}
 @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(28px,-36px) scale(1.07)}}
 
+/* ─── ANIMATIONS ─── */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInScale{from{opacity:0;transform:scale(.92)}to{opacity:1;transform:scale(1)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes pulseGlow{0%,100%{box-shadow:0 0 12px rgba(0,217,255,.4)}50%{box-shadow:0 0 28px rgba(0,217,255,.7),0 0 60px rgba(0,217,255,.2)}}
+@keyframes slideInLeft{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes spinOnce{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes countPop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes borderTrace{
+  0%{border-color:rgba(0,217,255,.15)}
+  50%{border-color:rgba(0,217,255,.5)}
+  100%{border-color:rgba(0,217,255,.15)}
+}
+
 /* ─── NAV ─── */
 nav{
   position:fixed;top:0;left:0;right:0;z-index:1000;
@@ -81,18 +95,28 @@ nav{
 .grad{background:linear-gradient(135deg,var(--cyan),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
 /* ─── HERO MINI ─── */
-.hero-mini{text-align:center;margin-bottom:60px;padding-top:20px}
-.hero-mini h1{font-size:clamp(2rem,5vw,3.6rem);font-weight:900;letter-spacing:-.04em;margin-bottom:12px}
-.hero-mini p{color:var(--muted);font-size:1rem;max-width:520px;margin:0 auto}
+.hero-mini{text-align:center;margin-bottom:60px;padding-top:20px;animation:fadeInUp .8s ease-out}
+.hero-mini h1{
+  font-size:clamp(2rem,5vw,3.6rem);font-weight:900;letter-spacing:-.04em;margin-bottom:12px;
+  animation:fadeInUp .8s ease-out .1s both;
+}
+.hero-mini .grad{
+  background:linear-gradient(135deg,var(--cyan),var(--purple),var(--cyan));
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:shimmer 4s linear infinite;
+}
+.hero-mini p{color:var(--muted);font-size:1rem;max-width:520px;margin:0 auto;animation:fadeInUp .8s ease-out .25s both}
 
 /* ─── UPLOAD ZONE ─── */
-.upload-section{margin-bottom:36px}
+.upload-section{margin-bottom:36px;animation:fadeInUp .8s ease-out .4s both}
 .drop-zone{
   border:2px dashed var(--border-hi);border-radius:var(--r);
   padding:56px 32px;text-align:center;cursor:pointer;
   background:rgba(99,179,237,.03);
-  transition:all .3s;position:relative;overflow:hidden;
+  transition:all .4s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;
 }
+.drop-zone:hover{transform:scale(1.005)}
 .drop-zone::before{
   content:'';position:absolute;inset:0;
   background:linear-gradient(135deg,rgba(0,217,255,.04),rgba(159,122,234,.04));
@@ -128,7 +152,10 @@ nav{
   display:flex;align-items:center;gap:12px;
   background:var(--bg2);border:1px solid var(--border);
   border-radius:var(--r-sm);padding:12px 16px;
+  animation:slideInLeft .35s ease-out both;
+  transition:all .25s;
 }
+.file-item:hover{border-color:var(--border-hi);background:rgba(12,17,32,.9);transform:translateX(4px)}
 .file-item-icon{font-size:1.3rem;flex-shrink:0}
 .file-item-info{flex:1;min-width:0}
 .file-item-name{font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -155,9 +182,17 @@ nav{
   cursor:pointer;border:none;font-family:var(--font);
   background:linear-gradient(135deg,var(--blue),var(--cyan));
   color:#050811;box-shadow:0 0 28px rgba(0,217,255,.28);
-  transition:all .25s;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden;
 }
-.btn-upload:hover{transform:translateY(-2px);box-shadow:0 0 44px rgba(0,217,255,.45)}
+.btn-upload::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+  transform:translateX(-100%);transition:transform .6s;
+}
+.btn-upload:hover::after{transform:translateX(100%)}
+.btn-upload:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 0 48px rgba(0,217,255,.5)}
+.btn-upload:active{transform:translateY(0) scale(.98)}
 .btn-upload:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
 
 /* ─── PROGRESS PANEL ─── */
@@ -180,10 +215,18 @@ nav{
 }
 .progress-bar-fill{
   height:100%;border-radius:99px;
-  background:linear-gradient(90deg,var(--blue),var(--cyan));
+  background:linear-gradient(90deg,var(--blue),var(--cyan),var(--blue));
+  background-size:200% 100%;
   transition:width .5s cubic-bezier(.4,0,.2,1);
   box-shadow:0 0 12px rgba(0,217,255,.5);
   width:0%;
+  animation:pulseGlow 2s ease-in-out infinite,shimmer 2s linear infinite;
+}
+.progress-bar-fill::after{
+  content:'';position:absolute;right:0;top:0;bottom:0;width:20px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.4));
+  border-radius:99px;
+  animation:pulseGlow 1.5s ease-in-out infinite;
 }
 .progress-stage{font-size:.88rem;color:var(--muted);font-family:var(--mono)}
 
@@ -193,12 +236,22 @@ nav{
 }
 .ps{
   background:rgba(255,255,255,.02);border:1px solid var(--border);
-  border-radius:var(--r-sm);padding:12px;text-align:center;transition:all .4s;
+  border-radius:var(--r-sm);padding:12px;text-align:center;
+  transition:all .4s cubic-bezier(.4,0,.2,1);
 }
-.ps.active{border-color:rgba(0,217,255,.4);background:rgba(0,217,255,.06);box-shadow:0 0 16px rgba(0,217,255,.1)}
-.ps.done{border-color:rgba(72,187,120,.3);background:rgba(72,187,120,.05)}
-.ps-icon{font-size:1.4rem;margin-bottom:6px;display:block}
-.ps-name{font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.04em}
+.ps.active{
+  border-color:rgba(0,217,255,.4);background:rgba(0,217,255,.06);
+  box-shadow:0 0 16px rgba(0,217,255,.1);
+  animation:borderTrace 2s ease-in-out infinite;
+}
+.ps.active .ps-icon{animation:float 2s ease-in-out infinite}
+.ps.done{
+  border-color:rgba(72,187,120,.3);background:rgba(72,187,120,.05);
+  animation:fadeInScale .4s ease-out;
+}
+.ps-icon{font-size:1.4rem;margin-bottom:6px;display:block;transition:transform .3s}
+.ps:hover .ps-icon{transform:scale(1.2)}
+.ps-name{font-size:.68rem;font-weight:600;color:var(--muted);letter-spacing:.04em;transition:color .3s}
 .ps.active .ps-name{color:var(--cyan)}
 .ps.done  .ps-name{color:var(--green)}
 
@@ -210,14 +263,24 @@ nav{
 }
 .metric-box{
   background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
-  padding:24px;text-align:center;transition:all .3s;
+  padding:24px;text-align:center;
+  transition:all .35s cubic-bezier(.4,0,.2,1);
+  opacity:0;animation:fadeInUp .6s ease-out forwards;
 }
-.metric-box:hover{border-color:var(--border-hi);transform:translateY(-2px)}
-.metric-box-icon{font-size:2rem;margin-bottom:10px;display:block}
+.metric-box:nth-child(1){animation-delay:.1s}
+.metric-box:nth-child(2){animation-delay:.2s}
+.metric-box:nth-child(3){animation-delay:.3s}
+.metric-box:nth-child(4){animation-delay:.4s}
+.metric-box:nth-child(5){animation-delay:.5s}
+.metric-box:nth-child(6){animation-delay:.6s}
+.metric-box:hover{border-color:var(--border-hi);transform:translateY(-4px) scale(1.02);box-shadow:0 8px 32px rgba(0,0,0,.3)}
+.metric-box-icon{font-size:2rem;margin-bottom:10px;display:block;transition:transform .3s}
+.metric-box:hover .metric-box-icon{transform:scale(1.15) rotate(5deg)}
 .metric-box-val{
   font-size:2.2rem;font-weight:900;letter-spacing:-.04em;display:block;
   background:linear-gradient(135deg,var(--cyan),var(--blue));
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:countPop .5s ease-out;
 }
 .metric-box-val.accent-green{background:linear-gradient(135deg,var(--green),var(--cyan));-webkit-background-clip:text;background-clip:text;}
 .metric-box-val.accent-purple{background:linear-gradient(135deg,var(--purple),var(--cyan));-webkit-background-clip:text;background-clip:text;}
@@ -246,9 +309,14 @@ nav{
 }
 .sample-card{
   background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);
-  overflow:hidden;transition:all .3s;
+  overflow:hidden;transition:all .35s cubic-bezier(.4,0,.2,1);
+  opacity:0;animation:fadeInScale .5s ease-out forwards;
 }
-.sample-card:hover{border-color:var(--border-hi);transform:translateY(-2px)}
+.sample-card:nth-child(1){animation-delay:.15s}
+.sample-card:nth-child(2){animation-delay:.3s}
+.sample-card:nth-child(3){animation-delay:.45s}
+.sample-card:nth-child(4){animation-delay:.6s}
+.sample-card:hover{border-color:var(--border-hi);transform:translateY(-4px) scale(1.01);box-shadow:0 12px 40px rgba(0,0,0,.3)}
 .sample-card-head{
   display:flex;justify-content:space-between;align-items:center;
   padding:14px 16px;border-bottom:1px solid var(--border);
@@ -281,15 +349,23 @@ nav{
 .sample-metric-label{font-size:.68rem;color:var(--muted)}
 
 /* ─── DOWNLOAD / ACTIONS ─── */
-.result-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:40px}
+.result-actions{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:40px;animation:fadeInUp .6s ease-out .7s both}
 .btn-download{
   display:inline-flex;align-items:center;gap:10px;
   background:linear-gradient(135deg,var(--blue),var(--cyan));
   color:#050811;padding:14px 32px;border-radius:10px;font-size:.95rem;font-weight:700;
   text-decoration:none;cursor:pointer;border:none;font-family:var(--font);
-  box-shadow:0 0 30px rgba(0,217,255,.3);transition:all .25s;
+  box-shadow:0 0 30px rgba(0,217,255,.3);
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden;
 }
-.btn-download:hover{transform:translateY(-2px);box-shadow:0 0 48px rgba(0,217,255,.5)}
+.btn-download::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+  transform:translateX(-100%);transition:transform .6s;
+}
+.btn-download:hover::after{transform:translateX(100%)}
+.btn-download:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 0 52px rgba(0,217,255,.55)}
 .btn-reset{
   display:inline-flex;align-items:center;gap:10px;
   background:rgba(255,255,255,.05);border:1px solid var(--border);
@@ -719,6 +795,7 @@ function renderFileList() {
 
     const div = document.createElement('div');
     div.className = 'file-item';
+    div.style.animationDelay = `${i * 0.06}s`;
     div.innerHTML = `
       <span class="file-item-icon">${icon}</span>
       <div class="file-item-info">
