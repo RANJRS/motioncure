@@ -26,11 +26,12 @@ html{scroll-behavior:smooth;overflow-x:hidden}
 body{
   font-family:var(--font);background:var(--bg);color:var(--text);
   line-height:1.6;overflow-x:hidden;min-height:100vh;
+  scrollbar-width:thin;scrollbar-color:var(--bg) var(--bg);
 }
 
 /* ─── GRID BG ─── */
 .bg-grid{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
+  position:fixed;top:0;left:0;bottom:0;right:8px;z-index:0;pointer-events:none;
   background-image:
     linear-gradient(rgba(99,179,237,.04)1px,transparent 1px),
     linear-gradient(90deg,rgba(99,179,237,.04)1px,transparent 1px);
@@ -489,10 +490,10 @@ nav{
 .btn-dl-sm:hover{background:rgba(0,217,255,.18)}
 
 /* ─── SCROLLBAR ─── */
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:rgba(99,179,237,.15);border-radius:6px}
-::-webkit-scrollbar-thumb:hover{background:rgba(99,179,237,.3)}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:#050811}
+::-webkit-scrollbar-thumb{background:#050811;border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:#0c1120}
 
 /* ─── RESPONSIVE ─── */
 @media(max-width:640px){
