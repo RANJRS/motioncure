@@ -821,8 +821,8 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
     // 1. Reset backend before starting chunked upload
     await fetch('/reset', { method: 'POST' }).catch(() => {});
 
-    // 2. Batch upload to avoid 413 Payload Too Large
-    const BATCH_SIZE = 50;
+    // 2. Batch upload to avoid 413 Payload Too Large or Memory Errors
+    const BATCH_SIZE = 10;
     let totalFrames = 0;
 
     for (let i = 0; i < selectedFiles.length; i += BATCH_SIZE) {
@@ -835,12 +835,16 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
       fd.append('is_chunk', 'true');
 
       const res = await fetch('/upload', { method: 'POST', body: fd });
-      if (!res.ok) {
-        // Handle HTML error pages gracefully
+      
+      const contentType = res.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
         const text = await res.text();
-        let msg = `${res.status} ${res.statusText}`;
-        if (text.includes('413') || res.status === 413) msg = '413 Payload Too Large';
-        throw new Error(`Upload error: ${msg}. Try uploading fewer files.`);
+        throw new Error(`Server returned non-JSON response (${res.status} ${res.statusText}). Usually means payload is still too large or a server crash. Response snippet: ${text.slice(0, 100)}`);
+      }
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(`Upload error API: ${data.error || res.statusText}`);
       }
 
       const data = await res.json();
@@ -869,6 +873,11 @@ document.getElementById('run-btn').addEventListener('click', async () => {
 
   try {
     const res  = await fetch('/run', { method: 'POST' });
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      const text = await res.text();
+      throw new Error(`Server returned non-JSON response to /run (${res.status} ${res.statusText}). Response snippet: ${text.slice(0, 100)}`);
+    }
     const data = await res.json();
     if (!data.success) throw new Error(data.error || 'Could not start pipeline.');
     pollStatus();
