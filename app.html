@@ -817,16 +817,38 @@ document.getElementById('upload-btn').addEventListener('click', async () => {
   btn.disabled = true;
   btn.textContent = '⬆ Uploading…';
 
-  const fd = new FormData();
-  selectedFiles.forEach(f => fd.append('files', f));
-
   try {
-    const res  = await fetch('/upload', { method: 'POST', body: fd });
-    const data = await res.json();
+    // 1. Reset backend before starting chunked upload
+    await fetch('/reset', { method: 'POST' }).catch(() => {});
 
-    if (!data.success) throw new Error(data.error || 'Upload failed');
+    // 2. Batch upload to avoid 413 Payload Too Large
+    const BATCH_SIZE = 50;
+    let totalFrames = 0;
 
-    document.getElementById('server-frame-count').textContent = data.frame_count;
+    for (let i = 0; i < selectedFiles.length; i += BATCH_SIZE) {
+      const pct = Math.round((i / selectedFiles.length) * 100);
+      btn.textContent = `⬆ Uploading… (${pct}%)`;
+
+      const chunk = selectedFiles.slice(i, i + BATCH_SIZE);
+      const fd = new FormData();
+      chunk.forEach(f => fd.append('files', f));
+      fd.append('is_chunk', 'true');
+
+      const res = await fetch('/upload', { method: 'POST', body: fd });
+      if (!res.ok) {
+        // Handle HTML error pages gracefully
+        const text = await res.text();
+        let msg = `${res.status} ${res.statusText}`;
+        if (text.includes('413') || res.status === 413) msg = '413 Payload Too Large';
+        throw new Error(`Upload error: ${msg}. Try uploading fewer files.`);
+      }
+
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Upload failed');
+      totalFrames = data.frame_count;
+    }
+
+    document.getElementById('server-frame-count').textContent = totalFrames;
     document.getElementById('run-section').style.display = 'block';
     document.getElementById('upload-actions').style.display = 'none';
     btn.disabled = false;

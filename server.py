@@ -369,13 +369,20 @@ def upload():
     global state
     state = {'status': 'uploading', 'progress': 2, 'stage': 'Receiving files…', 'metrics': None, 'error': None}
 
-    # Wipe previous run
-    for d in (UPLOAD_DIR, PROCESSED_DIR):
-        if os.path.exists(d):
-            shutil.rmtree(d)
-        os.makedirs(d, exist_ok=True)
-    if os.path.exists(OUTPUT_AVI):
-        os.remove(OUTPUT_AVI)
+    is_chunk = request.form.get('is_chunk') == 'true'
+
+    # Wipe previous run only if not part of a chunked upload
+    # (The frontend calls /reset explicitly before starting chunks)
+    if not is_chunk:
+        for d in (UPLOAD_DIR, PROCESSED_DIR):
+            if os.path.exists(d):
+                shutil.rmtree(d)
+            os.makedirs(d, exist_ok=True)
+        if os.path.exists(OUTPUT_AVI):
+            os.remove(OUTPUT_AVI)
+    else:
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        os.makedirs(PROCESSED_DIR, exist_ok=True)
 
     uploaded = request.files.getlist('files')
     if not uploaded:
@@ -383,7 +390,10 @@ def upload():
         return jsonify({'success': False, 'error': 'No files received.'}), 400
 
     valid_exts = ('.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.tif')
-    img_counter = 0  # sequential counter to avoid filename collisions
+    
+    # Continue counting from existing files to prevent overwriting across chunks
+    existing_files = [f for f in os.listdir(UPLOAD_DIR) if f.lower().endswith(valid_exts)]
+    img_counter = len(existing_files)
 
     for f in uploaded:
         name = os.path.basename(f.filename)
